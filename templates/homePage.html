@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='loginPageBackdrop.jpg') }}"); /* Replace with your image path */
+            background-size: cover; /* Ensures the image covers the full page */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents repeating */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0; /* Removes default margin */
+        }
+        .login-container {
+            background: black;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button {
+            background-color: #CEB888;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 id="welcome-message" style="color:white">Welcome!</h2>
+        <input type="text" id="username" name="username" placeholder="Enter Username" required>
+        <input type="text" id="password" name="password" placeholder="Enter Password" required>
+        <button onclick="login()">Login</button>
+        <!-- <button onclick="logout()">Logout</button> -->
+    </div>
+
+    <script>
+        async function fetchSession() {
+            const response = await fetch("http://localhost:3001/", { credentials: "include" });
+            // const data = await response.json();
+            const username = session ? session.get("user") : "Guest";
+            document.getElementById("welcome-message").textContent = "Welcome, " + username + "!";
+        }
+
+        async function login() {
+            var formData = new FormData();
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                alert("Please enter both username and password.");
+                return;
+            }
+            
+            // Prepare data to be sent in the request
+            formData.append('username', username);
+            formData.append('password', password);
+
+            // Use fetch API to send POST request
+            fetch('/login', {
+                method: 'POST',
+                body: formData,
+            })
+
+            window.location.href = "http://localhost:3001/login";
+        }
+
+        function logout() {
+            window.location.href = "http://localhost:3001/logout";
+        }
+
+        window.onload = fetchSession;
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Planner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #CEB888;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+        }
+
+        .calendar {
+            width: 70%;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .planner {
+            width: 25%;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .calendar th, .calendar td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .calendar th {
+            background-color: #CEB888;
+            color: white;
+        }
+
+        .calendar .today {
+            background-color: #f4f4f4;
+        }
+
+        .planner textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .planner button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #CEB888;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .planner button:hover {
+            background-color: #CEB888;
+        }
+
+        .today-date {
+            font-size: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Personal Planner</h1>
+</header>
+
+<div class="container">
+    <div class="calendar">
+        <div class="today-date">
+            <span id="currentDate"></span>
+        </div>
+        <table id="calendarTable">
+            <thead>
+                <tr>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Calendar days will be generated here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="planner">
+        <h3>Your Planner</h3>
+        <textarea id="plannerNotes" placeholder="Write your plans for the day..."></textarea>
+        <button onclick="saveNotes()">Save Notes</button>
+    </div>
+</div>
+
+<script>
+    const plannerNotes = localStorage.getItem('plannerNotes') || '';
+    document.getElementById('plannerNotes').value = plannerNotes;
+
+    function saveNotes() {
+        const notes = document.getElementById('plannerNotes').value;
+        localStorage.setItem('plannerNotes', notes);
+        alert('Notes saved!');
+    }
+
+    function generateCalendar() {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const currentDay = now.getDate();
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        
+        const daysInMonth = lastDay.getDate();
+        const startDay = firstDay.getDay();
+        const today = new Date(currentYear, currentMonth, currentDay);
+
+        const calendarBody = document.querySelector('#calendarTable tbody');
+        calendarBody.innerHTML = '';
+
+        let day = 1;
+        for (let row = 0; row < 6; row++) {
+            const tr = document.createElement('tr');
+            for (let col = 0; col < 7; col++) {
+                const td = document.createElement('td');
+                if (row === 0 && col < startDay) {
+                    td.textContent = '';
+                } else if (day <= daysInMonth) {
+                    td.textContent = day;
+                    if (day === currentDay) {
+                        td.classList.add('today');
+                    }
+                    day++;
+                }
+                tr.appendChild(td);
+            }
+            calendarBody.appendChild(tr);
+            if (day > daysInMonth) break;
+        }
+
+        document.getElementById('currentDate').textContent = now.toDateString();
+    }
+
+    window.onload = generateCalendar;
+</script>
+
+</body>
+</html>
