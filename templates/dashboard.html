@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Dashboard</title>
+    <style>
+        body {
+            font-family: Monaco, monospace;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .dashboard {
+            background: white;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #CEB888;
+        }
+
+        .welcome-message {
+            font-size: 20px;
+            margin: 20px 0;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            background: #CEB888;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #CEB888;
+        }
+
+        .calendar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #CEB888;
+            color: white;
+            font-size: 18px;
+        }
+
+        .event {
+            background: #CEB888;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .event time {
+            font-weight: bold;
+            color: #CEB888;
+        }
+
+        .no-events {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Welcome, {{ user }}!</h1>
+        <p class="welcome-message">We're glad to have you here. This is your personalized study planner.</p>
+    </div>
+
+    <h1>Weekly Calendar</h1>
+    <div class="calendar-container">
+        <table>
+            <tr>
+                {% for day in [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] %}
+                    <th>{{ day }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] %}
+                    <td>
+                        {% if events.get(day) %}
+                            {% for event in events[day] %}
+                                <div class="event">
+                                    <strong>{{ event.summary }}</strong><br>
+                                    🕒 {{ event.start_time }} - {{ event.end_time }}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <i>No events</i>
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        </table>
+    </div>
+
+    <div class="actions">
+        <a href="/logout" class="btn">🔓 Logout</a>
+    </div>
+
+</body>
+</html>

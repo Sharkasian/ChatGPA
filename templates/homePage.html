@@ -1,66 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <style>
-        body {
-            background-image: url("{{ url_for('static', filename='loginPageBackdrop.jpg') }}"); /* Replace with your image path */
-            background-size: cover; /* Ensures the image covers the full page */
-            background-position: center; /* Centers the image */
-            background-repeat: no-repeat; /* Prevents repeating */
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0; /* Removes default margin */
-        }
-        .login-container {
-            background: black;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        input {
-            width: 80%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            text-align: center;
-        }
-        button {
-            background-color: #CEB888;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Lucida Console", monospace;
+    }
+    .container {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0;
+      padding: 0 0px;
+    }
+    .Navigation {
+      width: 100%;
+      padding: 20px;
+      background: black;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .Navigation .SiteName, .Navigation .Items .Page, .Navigation .Button {
+      color: white;
+      font-size: 20px;
+      font-family: "Lucida Console", monospace;
+      font-weight: 500;
+      line-height: 30px;
+    }
+    .Navigation .Button {
+      padding: 14px 24px;
+      background: black;
+      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .Chatgpa {
+      color: white;
+      font-size: 50px;
+      font-family: "Lucida Console", monospace;
+      font-style: italic;
+      font-style: bold;
+      font-weight: 600;
+      line-height: 75px;
+    }
+    .Copy {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+    .PageTitle .Welcome {
+      color: black;
+      font-size: 64px;
+      font-family: "Lucida Console", monospace;
+      font-weight: 700;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .PageTitle .WelcomeToChatgpaYourOneStopStudyPlanner {
+      color: black;
+      font-size: 24px;
+      font-family: "Lucida Console", monospace;
+      font-weight: 400;
+      line-height: 36px;
+      margin-left: 15px;
+      margin-bottom: 30px;
+    }
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      margin-left: 15px;
+      width: 18%;
+      gap: 8px;
+    }
+    .login-container input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid hsl(0, 0%, 0%);
+      font-family: "Lucida Console", monospace;
+      border-radius: 8px;
+    }
+    .namelabel {
+      color: black;
+      font-size: 14px;
+      font-family: "Lucida Console", monospace;
+      font-weight: 200;
+      line-height: 18px;
+      margin-bottom: -5px;
+      margin-left: 2px;
+    }
+    .Button {
+      padding: 14px 5px;
+      margin: 15px;
+      background: black;
+      color: white;
+      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 10%;
+    }
+    @media (max-width: 768px) {
+      .Chatgpa {
+        font-size: 36px;
+        line-height: 54px;
+      }
+      .PageTitle .Welcome {
+        margin-left: 15px;
+        padding: 14px;
+        font-size: 48px;
+      }
+      .PageTitle .WelcomeToChatgpaYourOneStopStudyPlanner {
+        margin-left: 15px;
+        padding: 14px;
+        font-size: 18px;
+        line-height: 27px;
+      }
+      .Button {
+        padding: 5px 5px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2 id="welcome-message" style="color:white">Welcome!</h2>
-        <input type="text" id="username" name="username" placeholder="Enter Username" required>
-        <input type="text" id="password" name="password" placeholder="Enter Password" required>
-        <button onclick="login()">Login</button>
-        <!-- <button onclick="logout()">Logout</button> -->
+  <div class="container">
+    <div class="Navigation">
+      <div class="Chatgpa">chatGPA</div>
     </div>
-
-    <script>
-        async function fetchSession() {
-            const response = await fetch("http://localhost:3001/", { credentials: "include" });
-            // const data = await response.json();
-            const username = session ? session.get("user") : "Guest";
-            document.getElementById("welcome-message").textContent = "Welcome, " + username + "!";
-        }
-
-        async function login() {
+    <div class="WelcomeMessage">
+      <div class="PageTitle">
+        <div class="Welcome">Welcome!</div>
+        <div class="WelcomeToChatgpaYourOneStopStudyPlanner">
+          Welcome to chatGPA, your one-stop study planner.</div>
+      </div>
+      <div class="login-container">
+        <div class="namelabel">Username</div>
+        <input type="text" id="username" name="username" placeholder="Enter Username" required>
+        <div class="namelabel">Password</div>
+        <input type="text" id="password" name="password" placeholder="Enter Password" required>
+      </div>
+      <div class="Button" onclick=login()>Login</div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+     async function login() {
             var formData = new FormData();
             var username = document.getElementById("username").value;
             var password = document.getElementById("password").value;
@@ -86,8 +176,5 @@
         function logout() {
             window.location.href = "http://localhost:3001/logout";
         }
-
-        window.onload = fetchSession;
-    </script>
-</body>
+</script>
 </html>
