@@ -1,0 +1,75 @@
+function OpenCopyToOtherCoursesDialog(titleText, orgUnitId, newsId) {
+    // Displays a Dialog with an IFrame that fetches the CopyNewsToOtherCourses dialog
+
+    function displayDialog(titleText, contentElement, dialog_id) {
+        // From D2L.LP.Web.Desktop
+        var titleText = titleText;
+        var contentElement = contentElement;
+        var primaryButtonText = null;
+        var secondaryButtonText = null;
+        var primaryButtonCallback = null;
+        var secondaryButtonCallback = null;
+        var abortCallBack = null;
+        var openerId = new D2L.LP.Web.UI.Html.UniqueHtmlId();
+        var id = dialog_id;
+        var isCritical = false;
+        var useGeneralDialog = true;
+
+        var contentElementForDialog = document.createDocumentFragment();
+        contentElementForDialog.appendChild(contentElement);
+
+        D2L.LP.Web.UI.Desktop.MasterPages.Dialog.Confirm.OpenWithElement(
+            titleText,
+            contentElementForDialog,
+            primaryButtonText,
+            secondaryButtonText,
+            primaryButtonCallback,
+            secondaryButtonCallback,
+            abortCallBack,
+            openerId,
+            id,
+            isCritical,
+            useGeneralDialog
+        );
+    }
+
+    function populateIFrame() {
+        // Fetch CopyNewsToOtherCourses dialog
+        var formData = new FormData();
+        formData.append('d2l_referrer',  D2L.LP.Web.Authentication.Xsrf.GetXsrfToken());
+
+        var url = `../le/${orgUnitId}/copyToOtherCourses/news/${newsId}`;
+        url += `?batch=null&d2l_body_type=2&ou=${orgUnitId}`;
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onreadystatechange = function() {
+            if(request.readyState == 4 && request.status == 200) {
+                iFrame.contentWindow.document.open();
+                iFrame.contentWindow.document.write(request.response);
+                iFrame.contentWindow.document.close();
+            }
+        }
+        request.send(formData);
+    }
+
+    // Create the iFrame element
+    const iFrame = document.createElement('iframe');
+    iFrame.setAttribute('frameBorder', 0);
+    iFrame.src = '/d2l/tools/blank.html';
+    iFrame.setAttribute('scrolling', 'no');
+    iFrame.setAttribute('class', 'ddial_c_frame');
+    iFrame.setAttribute('name', new D2L.LP.Web.UI.Html.UniqueHtmlId().GetValue());
+    iFrame.setAttribute('title', titleText );
+    iFrame.setAttribute('style', `min-height:350px; width: 100%;` );
+    iFrame.addEventListener('load', populateIFrame, {once: true});
+
+    // Display the Dialog
+    const dialogId = new D2L.LP.Web.UI.Html.UniqueHtmlId();
+    displayDialog(titleText, iFrame, dialogId);
+	
+    window.CloseCopyDialog = function () {
+        const dialog = document.getElementById(dialogId.GetValue());
+        dialog.opened = false;
+        delete window.CloseCopyDialog;
+    };
+}
