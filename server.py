@@ -78,7 +78,7 @@ def logout():
 
 
 @app.route("/dashboard", methods=["GET"])
-def planner():
+def dashboard():
     user_info = session.get("user")
 
     session["user"] = {
