@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard & Chatbot</title>
+    <style>
+        body {
+            font-family: Monaco, monospace;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 90%;
+            max-width: 1200px;
+            flex-wrap: wrap;
+        }
+
+        .dashboard, .chat-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 400px;
+            min-height: 600px; /* Ensures both have the same height */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        .dashboard {
+            flex: 1;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #CEB888;
+        }
+
+        .calendar-container {
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #CEB888;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 2px solid black;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user {
+            text-align: right;
+            background-color: #DCF8C6;
+            align-self: flex-end;
+        }
+
+        .bot {
+            text-align: left;
+            background-color: #F1F0F0;
+            align-self: flex-start;
+        }
+
+        #user-input {
+            width: calc(100% - 110px);
+            padding: 10px;
+            border: 1px solid black;
+            border-radius: 4px;
+        }
+
+        #send-button {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid black;
+            background-color: #CEB888;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #send-button:hover {
+            background-color: #a0804f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <h1>Welcome, {{ user }}!</h1>
+            <p>Your personalized study planner.</p>
+
+            <h2>Weekly Calendar</h2>
+            <div class="calendar-container">
+                <table>
+                    <tr>
+                        {% for day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] %}
+                            <th>{{ day }}</th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        {% for day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] %}
+                            <td>
+                                {% if events.get(day) %}
+                                    {% for event in events[day] %}
+                                        <div class="event">
+                                            <strong>{{ event.summary }}</strong><br>
+                                            🕒 {{ event.start_time }} - {{ event.end_time }}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <i>No events</i>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
+            <a href="/logout" class="btn">🔓 Logout</a>
+        </div>
+
+        <div class="chat-container">
+            <h2>Gemini AI Chatbot</h2>
+            <p>Ask me anything!</p>
+            <div id="messages"></div>
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("send-button").addEventListener("click", function() {
+            const userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;
+
+            const messagesContainer = document.getElementById("messages");
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.className = "message user";
+            userMessageDiv.textContent = userInput;
+            messagesContainer.appendChild(userMessageDiv);
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessageDiv = document.createElement("div");
+                botMessageDiv.className = "message bot";
+                botMessageDiv.textContent = data.reply || data.error;
+                messagesContainer.appendChild(botMessageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+
+            document.getElementById("user-input").value = "";
+        });
+    </script>
+</body>
+</html>
