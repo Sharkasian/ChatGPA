@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/stylehome.css') }}">
+    <script src="{{ url_for('static', filename='JS/homepage.js') }}"></script>
+</head>
+<body>
+<div class="container">
+  <h1 class="title">ChatGPA</h1>
+  <div class="card">
+      <form>
+          <input type="text" placeholder="Brightspace-Username" id="username">
+          <input type="password" placeholder="Password" id="password">
+      </form>
+      <form action="/login" method="POST">
+        <div class="buttons">
+          <button type="submit" class="login-button" onclick="login()">Login</button>
+        </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>
+
+
+

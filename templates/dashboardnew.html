@@ -11,19 +11,19 @@
             margin: 0;
             padding: 20px;
             display: flex;
-            justify-content: space-around;
-            align-items: flex-start;
-            height: 100vh;
+            flex-direction: column; /* Stack elements vertically */
+            align-items: center;
+            height: auto; /* Allow scrolling */
+            min-height: 100vh;
         }
 
         .container {
             display: flex;
-            justify-content: center;
+            flex-direction: column; /* Stack dashboard and chatbot */
             align-items: center;
-            gap: 40px;
             width: 90%;
-            max-width: 1200px;
-            flex-wrap: wrap;
+            max-width: 800px;
+            gap: 20px; /* Space between sections */
         }
 
         .dashboard, .chat-container {
@@ -31,18 +31,12 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            min-width: 400px;
-            min-height: 600px; /* Ensures both have the same height */
+            width: 100%; /* Full width of container */
+            min-width: 1000px;
+            min-height: 400px; /* Adjust for readability */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            text-align: center;
-        }
-
-        .dashboard {
-            flex: 1;
-            max-width: 500px;
             text-align: center;
         }
 
@@ -51,13 +45,16 @@
         }
 
         .calendar-container {
-            max-width: 500px;
+            width: 100%;
+            height: 600px;
             margin-top: 20px;
+            
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         th, td {
@@ -65,15 +62,32 @@
             padding: 10px;
             text-align: center;
         }
+        td {
+            height: auto;
+            overflow: hidden;
+        }
 
         th {
             background-color: #CEB888;
             color: white;
         }
+        td .event{
+            display: block; /* Ensures each event is on a new line */
+            margin: 5px 0;
+            background: #CEB888;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
         .chat-container {
-            flex: 1;
             max-width: 600px;
+        }
+        tr {
+            display: table-row;
+            height: auto !important;
         }
 
         #messages {
@@ -107,7 +121,7 @@
         }
 
         #user-input {
-            width: calc(100% - 110px);
+            width: 450px;
             padding: 10px;
             border: 1px solid black;
             border-radius: 4px;
@@ -122,11 +136,29 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            display: flex;
+
         }
 
         #send-button:hover {
             background-color: #a0804f;
         }
+        .calendar-container .event{
+        border: 2px solid #CEB888; /* Gold border */
+        padding: 8px;
+        margin: 5px 0;
+        border-radius: 5px;
+        background-color: #fff9e6; /* Light gold background */
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        font-weight: bold;
+        
+        }
+        
     </style>
 </head>
 <body>

@@ -15,12 +15,11 @@ async function login() {
 
     // Use fetch API to send POST request
     fetch('/login', {
-    method: 'POST',
-    body: formData,
+        method: 'POST',
+        body: formData,
     })
 
-    window.location.href = "http://localhost:5000/login";
-    }
+}
 
     function logout() {
     window.location.href = "http://localhost:5000/logout";

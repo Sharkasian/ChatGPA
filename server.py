@@ -75,7 +75,7 @@ def callback():
     return redirect("/dashboard")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
     redirect_uri = url_for("callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
@@ -141,7 +141,7 @@ def dashboard():
 
     # print(formatted_events)
     
-    return render_template("dashboard.html", events=formatted_events, user=user)
+    return render_template("dashboardnew.html", events=formatted_events, user=user)
 
 
 @app.route("/chat", methods=["GET", "POST"])
