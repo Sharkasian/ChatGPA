@@ -2,6 +2,7 @@ import json
 import requests
 import jsonify
 import re
+import os
 from os import environ as env
 
 import google.generativeai as genai
@@ -9,6 +10,10 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, redirect, render_template, session, url_for, request, jsonify
 from datetime import datetime, timedelta
+
+# custom functions
+from scraper import scrape_brightspace
+from pdf import pdf_to_txt
 
 
 ENV_FILE = find_dotenv()
@@ -40,10 +45,15 @@ def load_json_file(filename="exam_dates.json"):
     except Exception as e:
         return {"error": str(e)}
     
-def load_text_file(filename="exam_dates.txt"):
+def load_text_file():
+    inputs_folder = os.path.join(os.getcwd(), "inputs")
     try:
-        with open(filename, "r") as file:
-            return file.read()
+        for filename in os.listdir(inputs_folder):
+            if filename.endswith(".txt"):
+                file_path = os.path.join(inputs_folder, filename)
+                with open(file_path, "r", encoding="utf-8") as file:
+                    return file.read()
+        return "No text files found in the inputs folder."
     except Exception as e:
         return str(e)
 
@@ -154,6 +164,9 @@ def chat():
 
 @app.route("/exams", methods=["GET", "POST"])
 def extract_exam_dates():
+    # scrape_brightspace("deng312", "Edzt6921!")
+    # pdf_to_txt()
+    
     if request.method == "POST" and request.content_type != 'application/json':
         return jsonify({"error": "Unsupported Media Type. Content-Type must be 'application/json'"}), 415
 
@@ -163,27 +176,45 @@ def extract_exam_dates():
 
     try:
         # Read text file
-        exam_text = load_text_file()
-        if not exam_text:
+        syllabus = load_text_file()
+        print(syllabus)
+
+        if not syllabus:
             return jsonify({"error": "File is empty or missing"}), 500
 
         model = genai.GenerativeModel("gemini-pro")
+
+        promptInit = f"""
+        Summarize the following syllabus document and focus on exam or midterm schedule information,
+        exclude any exam information that is TBA or not determined yet:
+        \"\"\" 
+        {syllabus}
+        \"\"\"
+        """
+
+        responseInit = model.generate_content(promptInit)
+        raw_output = responseInit.text.strip()
+        print("Gemini Response:", raw_output)  # Debugging line
+
         prompt = f"""
-        Extract exam subjects, their dates, and times from the following text:
+        Go through the following syllabus document, look for any midterm or exam, 
+        use the year 2025 and the curret month information to help you,
+        extrac only the valid dates, and times:
         
         \"\"\" 
-        {exam_text}
+        {responseInit}
         \"\"\"
 
-        Return only a JSON object:
+        Return a JSON object with the following structure:
         {{
             "exam_schedule": [
-                {{"subject": "Math", "date": "YYYY-MM-DD", "time": "HH:MM"}},
-                {{"subject": "Physics", "date": "YYYY-MM-DD", "time": "HH:MM"}},
-                {{"subject": "Chemistry", "date": "YYYY-MM-DD", "time": "HH:MM"}}
+                {{"subject": "Math", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
+                {{"subject": "Physics", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
+                {{"subject": "Chemistry", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}}
             ]
         }}
         """
+        # print(syllabus)
 
         response = model.generate_content(prompt)
         raw_output = response.text.strip()
@@ -217,11 +248,11 @@ def extract_exam_dates():
                 "summary": exam["subject"],
                 "start": {
                     "dateTime": start_time.isoformat(),
-                    "timeZone": "EST"
+                    "timeZone": "UTC"
                 },
                 "end": {
                     "dateTime": end_time.isoformat(),
-                    "timeZone": "EST"
+                    "timeZone": "UTC"
                 }
             }
 

@@ -11,7 +11,6 @@ import requests
 import json
 
 
-
 def click_at_coordinates(driver, x, y):
     """Clicks at the specified x, y pixel coordinates using JavaScript."""
     try:
@@ -75,7 +74,7 @@ def scrape_brightspace(username, password):
         login_button.click()
 
         # **Step 3: Login Process**
-        username_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "username")))
+        username_element = WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.ID, "username")))
 
         username_element.send_keys(username)
         password_element = driver.find_element(By.ID, "password")
@@ -86,13 +85,13 @@ def scrape_brightspace(username, password):
         time.sleep(2)
 
         # **Step 5: Wait for Homepage to Load**
-        WebDriverWait(driver, 10).until(EC.title_contains("Homepage - Purdue West Lafayette"))
+        WebDriverWait(driver, 8).until(EC.title_contains("Homepage - Purdue West Lafayette"))
         time.sleep(5)
         print("Logged in successfully!")
 
         # **Step 6: Scroll to the courses section**
         driver.execute_script("window.scrollBy(0, 500);")
-        time.sleep(2)
+        time.sleep(1)
              
         # **Step 8: Manually define the pixel coordinates for the course links**
         # Replace these pixel coordinates with the exact ones where the courses are located
@@ -101,14 +100,14 @@ def scrape_brightspace(username, password):
             (500, 300),
             (800, 300),
             (200, 600),
-            (500, 600),
-            (800, 600)
+            # (500, 600),
+            # (800, 600)
         ]  # Python list to store clicks
 
         # # **Step 8: Click on the def# ined coordinates**
         for x, y in course_coordinates:
             # Create an ActionChains obj#     ect
-            time.sleep(2)
+            time.sleep(1)
             print(x, y)
             actions = ActionChains(driver)
             # Move the mouse to the desired coordinates and click
@@ -129,20 +128,20 @@ def scrape_brightspace(username, password):
             driver.get(href)
             actions.move_by_offset(-x, -y).perform() # return to original position
             actions.move_by_offset(200,250).click().perform() # click on syllabus button
-            time.sleep(2)
+            time.sleep(1)
             actions.move_by_offset(-200,-250).perform() # reset mouse position
             
             # Find and click the download button
             download_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Download')]")
             download_button.click()
-            time.sleep(5)
+            time.sleep(1)
 
             driver.get("https://purdue.brightspace.com/")
-            time.sleep(2)
+            time.sleep(1)
             driver.execute_script("window.scrollBy(0, 500);")
         
     finally:
         driver.quit()
 
 # Run the scraper
-scrape_brightspace("deng312", "Edzt6921!")
+# scrape_brightspace("deng312", "Edzt6921!")
