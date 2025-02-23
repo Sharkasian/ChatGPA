@@ -1,11 +1,13 @@
 import json
 import requests
+import jsonify
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
 
+import google.generativeai as genai
 from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
-from flask import Flask, redirect, render_template, session, url_for, request
+from flask import Flask, redirect, render_template, session, url_for, request, jsonify
 from datetime import datetime, timedelta
 
 
@@ -15,6 +17,7 @@ if ENV_FILE:
 
 app = Flask(__name__)
 app.secret_key = env.get("APP_SECRET_KEY")  # Ensure this environment variable is set
+genai.configure(api_key=env.get("GEMINI_API_KEY"))
 
 oauth = OAuth(app)
 
@@ -108,6 +111,24 @@ def planner():
     # print(formatted_events)
     
     return render_template("dashboard.html", events=formatted_events, user=user)
+
+@app.route("/chat", methods=["GET", "POST"])
+def chat():
+    if request.method == "GET":
+        return render_template("chat.html")
+
+    user_message = request.json.get("message", "")
+
+    if not user_message:
+        return jsonify({"error": "Message cannot be empty"}), 400
+
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(user_message)
+        return jsonify({"reply": response.text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 if __name__ == "__main__":
     app.run(host="localhost", port=env.get("PORT", 3001), debug=True)
