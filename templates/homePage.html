@@ -6,175 +6,118 @@
     body {
       margin: 0;
       font-family: "Lucida Console", monospace;
-    }
-    .container {
-      width: 100%;
-      max-width: 1440px;
-      margin: 0;
-      padding: 0 0px;
+      background-color: rgb(255, 255, 255);
+      text-align: center;
     }
     .Navigation {
       width: 100%;
-      padding: 20px;
       background: black;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
-    }
-    .Navigation .SiteName, .Navigation .Items .Page, .Navigation .Button {
-      color: white;
-      font-size: 20px;
-      font-family: "Lucida Console", monospace;
-      font-weight: 500;
-      line-height: 30px;
-    }
-    .Navigation .Button {
-      padding: 14px 24px;
-      background: black;
-      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-      border-radius: 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 10px 20px;
     }
     .Chatgpa {
       color: white;
       font-size: 50px;
-      font-family: "Lucida Console", monospace;
-      font-style: italic;
-      font-style: bold;
-      font-weight: 600;
-      line-height: 75px;
+      font-weight: bold;
     }
-    .Copy {
-      padding: 20px;
+    .centercontent {
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 5%;
+    }
+    .WelcomeMessage {
+      border: 4px solid black;
+      background-color: rgb(175, 138, 78);
+      padding: 20px;
+      border-radius: 10px;
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .PageTitle .Welcome {
-      color: black;
       font-size: 64px;
-      font-family: "Lucida Console", monospace;
       font-weight: 700;
-      padding: 15px;
-      margin-top: 15px;
+      margin-bottom: 10px;
     }
     .PageTitle .WelcomeToChatgpaYourOneStopStudyPlanner {
-      color: black;
       font-size: 24px;
-      font-family: "Lucida Console", monospace;
       font-weight: 400;
-      line-height: 36px;
-      margin-left: 15px;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     .login-container {
+      width: 80%;
+      margin: auto;
       display: flex;
       flex-direction: column;
-      margin-left: 15px;
-      width: 18%;
-      gap: 8px;
+      align-items: center;
+      gap: 15px;
     }
     .login-container input {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      border: 2px solid hsl(0, 0%, 0%);
-      font-family: "Lucida Console", monospace;
+      border: 2px solid black;
       border-radius: 8px;
-    }
-    .namelabel {
-      color: black;
-      font-size: 14px;
-      font-family: "Lucida Console", monospace;
-      font-weight: 200;
-      line-height: 18px;
-      margin-bottom: -5px;
-      margin-left: 2px;
     }
     .Button {
-      padding: 14px 5px;
-      margin: 15px;
+      padding: 10px 20px;
       background: black;
       color: white;
-      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
       border-radius: 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 10%;
+      cursor: pointer;
+      width: 14%;
+      text-align: center;
+      margin-top: 15px;
     }
     @media (max-width: 768px) {
-      .Chatgpa {
-        font-size: 36px;
-        line-height: 54px;
+      .WelcomeMessage {
+        width: 90%;
       }
       .PageTitle .Welcome {
-        margin-left: 15px;
-        padding: 14px;
         font-size: 48px;
       }
       .PageTitle .WelcomeToChatgpaYourOneStopStudyPlanner {
-        margin-left: 15px;
-        padding: 14px;
         font-size: 18px;
-        line-height: 27px;
       }
       .Button {
-        padding: 5px 5px;
+        width: auto;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="Navigation">
-      <div class="Chatgpa">chatGPA</div>
-    </div>
+  <div class="Navigation">
+    <div class="Chatgpa">chatGPA</div>
+  </div>
+  <div class="centercontent">
     <div class="WelcomeMessage">
       <div class="PageTitle">
-        <div class="Welcome">Welcome!</div>
-        <div class="WelcomeToChatgpaYourOneStopStudyPlanner">
-          Welcome to chatGPA, your one-stop study planner.</div>
+        <div class="Welcome">Welcome Student!</div>
+        <div class="WelcomeToChatgpaYourOneStopStudyPlanner">Welcome to chatGPA, your one-stop study planner.</div>
       </div>
       <div class="login-container">
-        <div class="namelabel">Username</div>
-        <input type="text" id="username" name="username" placeholder="Enter Username" required>
-        <div class="namelabel">Password</div>
-        <input type="text" id="password" name="password" placeholder="Enter Password" required>
+        <input type="text" id="username" placeholder="Enter Username" required>
+        <input type="password" id="password" placeholder="Enter Password" required>
       </div>
-      <div class="Button" onclick=login()>Login</div>
-      </div>
+      <div class="Button" onclick="login()">Login</div>
     </div>
   </div>
 </body>
 <script>
-     async function login() {
-            var formData = new FormData();
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
-
-            if (!username || !password) {
-                alert("Please enter both username and password.");
-                return;
-            }
-            
-            // Prepare data to be sent in the request
-            formData.append('username', username);
-            formData.append('password', password);
-
-            // Use fetch API to send POST request
-            fetch('/login', {
-                method: 'POST',
-                body: formData,
-            })
-
-            window.location.href = "http://localhost:3001/login";
-        }
-
-        function logout() {
-            window.location.href = "http://localhost:3001/logout";
-        }
+  function login() {
+    var username = document.getElementById("username").value;
+    var password = document.getElementById("password").value;
+    if (!username || !password) {
+      alert("Please enter both username and password.");
+      return;
+    }
+    window.location.href = "http://localhost:3001/login";
+  }
 </script>
 </html>
+
+
