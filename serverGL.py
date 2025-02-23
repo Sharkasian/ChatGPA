@@ -1,6 +1,7 @@
 import json
 import requests
 import jsonify
+import re
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
 
@@ -27,9 +28,26 @@ oauth.register(
     client_secret=env.get("GOOGLE_CLIENT_SECRET"),
     client_kwargs={
         "scope": "openid profile email https://www.googleapis.com/auth/calendar.readonly",
+        "scope": "openid profile email https://www.googleapis.com/auth/calendar.events",
     },
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
 )
+
+# Load local JSON file for debugging
+def load_json_file(filename="exam_dates.json"):
+    try:
+        with open(filename, "r") as file:
+            return json.load(file)
+    except Exception as e:
+        return {"error": str(e)}
+    
+def load_text_file(filename="exam_dates.txt"):
+    try:
+        with open(filename, "r") as file:
+            return file.read()
+    except Exception as e:
+        return str(e)
+
 
 @app.route("/")
 def home():
@@ -39,6 +57,7 @@ def home():
         pretty=json.dumps(session.get("user"), indent=4),
     )
 
+
 @app.route("/callback")
 def callback():
     token = oauth.google.authorize_access_token()
@@ -46,15 +65,18 @@ def callback():
     session["access_token"] = token["access_token"]
     return redirect("/dashboard")
 
+
 @app.route("/login")
 def login():
     redirect_uri = url_for("callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
 
 @app.route("/dashboard", methods=["GET"])
 def planner():
@@ -112,6 +134,7 @@ def planner():
     
     return render_template("dashboard.html", events=formatted_events, user=user)
 
+
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
     if request.method == "GET":
@@ -129,6 +152,87 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+@app.route("/exams", methods=["GET", "POST"])
+def extract_exam_dates():
+    if request.method == "POST" and request.content_type != 'application/json':
+        return jsonify({"error": "Unsupported Media Type. Content-Type must be 'application/json'"}), 415
+
+    access_token = session.get("access_token")
+    if not access_token:
+        return jsonify({"error": "User not logged in"}), 401
+
+    try:
+        # Read text file
+        exam_text = load_text_file()
+        if not exam_text:
+            return jsonify({"error": "File is empty or missing"}), 500
+
+        model = genai.GenerativeModel("gemini-pro")
+        prompt = f"""
+        Extract exam subjects, their dates, and times from the following text:
+        
+        \"\"\" 
+        {exam_text}
+        \"\"\"
+
+        Return only a JSON object:
+        {{
+            "exam_schedule": [
+                {{"subject": "Math", "date": "YYYY-MM-DD", "time": "HH:MM"}},
+                {{"subject": "Physics", "date": "YYYY-MM-DD", "time": "HH:MM"}},
+                {{"subject": "Chemistry", "date": "YYYY-MM-DD", "time": "HH:MM"}}
+            ]
+        }}
+        """
+
+        response = model.generate_content(prompt)
+        raw_output = response.text.strip()
+        print("Gemini Response:", raw_output)  # Debugging line
+
+        # Extract JSON portion from response
+        json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
+        if json_match:
+            json_string = json_match.group(0)
+            extracted_dates = json.loads(json_string)
+        else:
+            return jsonify({"error": "Invalid JSON format from Gemini"}), 500
+
+        # Add events to Google Calendar
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        for exam in extracted_dates["exam_schedule"]:
+            event = {
+                "summary": exam["subject"],
+                "start": {
+                    "dateTime": f"{exam['date']}T{exam['time']}:00",
+                    "timeZone": "UTC"
+                },
+                "end": {
+                    "dateTime": f"{exam['date']}T{exam['time']}:00",
+                    "timeZone": "UTC"
+                }
+            }
+
+            response = requests.post(
+                "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                headers=headers,
+                json=event
+            )
+
+            if response.status_code != 200:
+                return jsonify({"error": response.json().get("error", "Failed to create event")}), response.status_code
+
+        return jsonify({"message": "Events created successfully"}), 200
+
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"JSON decode error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(host="localhost", port=env.get("PORT", 3001), debug=True)
