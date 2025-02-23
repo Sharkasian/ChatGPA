@@ -3,6 +3,8 @@ import requests
 import re
 import os
 from os import environ as env
+from video_utils import generate_video_url
+from video_utils import check_video_status
 
 import google.generativeai as genai
 from authlib.integrations.flask_client import OAuth
@@ -154,6 +156,7 @@ def dashboard():
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
+    token = oauth.google.authorize_access_token()
     if request.method == "GET":
         return render_template("chat.html")
 
@@ -167,7 +170,7 @@ def chat():
         response = model.generate_content(user_message)
         prompttext = "You are a tutor in the subject of choice said after the colon. I want you to write a paragraph as how a teacher would explain the topic mentioned. I do not want a script but some paragraphs that generate the text: "
         text_video = model.generate_content(prompttext + user_message)
-        print(text_video)
+        session["text_video"] = text_video
 
         return jsonify({"reply": response.text})
     except Exception as e:
@@ -265,6 +268,29 @@ def extract_exam_dates():
         return jsonify({"error": f"JSON decode error: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@app.route('/generate_video', methods=['POST'])
+def generate_video():
+    # Retrieve the text
+    text = text_video
+
+    # Generate video
+    job_id = generate_video_url(text)
+
+
+    if job_id:
+        return jsonify({"message": "Video generation started", "job_id": job_id}), 202
+    else:
+        return jsonify({"error": "Failed to start video generation"}), 500
+
+@app.route('/check_video_status/<job_id>', methods=['GET'])
+def check_status(job_id):
+    # Check video status
+    status, video_url = check_video_status(job_id)
+    
+    if status == "completed":
+        return jsonify({"status": status, "video_url": video_url}), 200
+    else:
+        return jsonify({"status": status, "video_url": None}), 202
 
 
 if __name__ == "__main__":
