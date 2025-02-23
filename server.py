@@ -3,7 +3,6 @@ import requests
 import jsonify
 import re
 from os import environ as env
-from urllib.parse import quote_plus, urlencode
 
 import google.generativeai as genai
 from authlib.integrations.flask_client import OAuth
@@ -205,15 +204,24 @@ def extract_exam_dates():
         }
 
         for exam in extracted_dates["exam_schedule"]:
+            # Split the time range into start and end times
+            time_range = exam["time"].split('-')
+            if len(time_range) != 2:
+                return jsonify({"error": "Invalid time range format"}), 400
+
+            start_time_str, end_time_str = time_range
+            start_time = datetime.strptime(f"{exam['date']} {start_time_str}", "%Y-%m-%d %H:%M")
+            end_time = datetime.strptime(f"{exam['date']} {end_time_str}", "%Y-%m-%d %H:%M")
+
             event = {
                 "summary": exam["subject"],
                 "start": {
-                    "dateTime": f"{exam['date']}T{exam['time']}:00",
-                    "timeZone": "UTC"
+                    "dateTime": start_time.isoformat(),
+                    "timeZone": "EST"
                 },
                 "end": {
-                    "dateTime": f"{exam['date']}T{exam['time']}:00",
-                    "timeZone": "UTC"
+                    "dateTime": end_time.isoformat(),
+                    "timeZone": "EST"
                 }
             }
 
@@ -235,4 +243,4 @@ def extract_exam_dates():
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=env.get("PORT", 3001), debug=True)
+    app.run(host="localhost", port=5000, debug=True)
