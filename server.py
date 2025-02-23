@@ -1,6 +1,5 @@
 import json
 import requests
-# import jsonify
 import re
 import os
 from os import environ as env
@@ -53,7 +52,7 @@ def load_text_file():
                 file_path = os.path.join(inputs_folder, filename)
                 with open(file_path, "r", encoding="utf-8") as file:
                     return file.read()
-        return "No text files found in the inputs folder."
+            return "No text files found in the inputs folder."
     except Exception as e:
         return str(e)
 
@@ -72,14 +71,31 @@ def callback():
     token = oauth.google.authorize_access_token()
     session["user"] = token
     session["access_token"] = token["access_token"]
-    return redirect("/dashboard")
+    return redirect("/loading")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    redirect_uri = url_for("callback", _external=True)
+    if request.method == "POST":
+        username = request.form.get("username")
+        session["username"] = username
+        password = request.form.get("password")
+        session["passwor"] = password
+
+        # Process the username and password as needed
+        print(f"Username: {username}, Password: {password}")
+        # You can add logic here to authenticate the user or perform other actions
+        redirect_uri = url_for("callback", _external=True)
+        return oauth.google.authorize_redirect(redirect_uri)
+    else:
+        redirect_uri = url_for("callback", _external=True)
+
     return oauth.google.authorize_redirect(redirect_uri)
 
+
+@app.route("/loading")
+def loading():
+    return render_template("main.html")
 
 @app.route("/logout")
 def logout():
@@ -89,15 +105,7 @@ def logout():
 
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
-    user_info = session.get("user")
-
-    session["user"] = {
-        "name": user_info.get("name"),
-        "email": user_info.get("email"),
-    }
-    user = session["user"].get("name")
-
-    print(user)
+    username = session["username"]
 
     access_token = session.get("access_token")
     if not access_token:
@@ -141,7 +149,7 @@ def dashboard():
 
     # print(formatted_events)
     
-    return render_template("dashboardnew.html", events=formatted_events, user=user)
+    return render_template("dashboardnew.html", events=formatted_events, user=username)
 
 
 @app.route("/chat", methods=["GET", "POST"])
@@ -162,11 +170,11 @@ def chat():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route("/exams", methods=["GET", "POST"])
+@app.route("/extract_exams", methods=["GET", "POST"])
 def extract_exam_dates():
-    # scrape_brightspace("deng312", "Edzt6921!")
-    # pdf_to_txt()
-    
+    scrape_brightspace(session["username"], session["password"])
+    pdf_to_txt()
+
     if request.method == "POST" and request.content_type != 'application/json':
         return jsonify({"error": "Unsupported Media Type. Content-Type must be 'application/json'"}), 415
 
@@ -176,36 +184,19 @@ def extract_exam_dates():
 
     try:
         # Read text file
-        syllabus = load_text_file()
-        print(syllabus)
-
-        if not syllabus:
+        exam_text = load_text_file()
+        if not exam_text:
             return jsonify({"error": "File is empty or missing"}), 500
 
         model = genai.GenerativeModel("gemini-pro")
-
-        promptInit = f"""
-        Summarize the following syllabus document and focus on exam or midterm schedule information,
-        exclude any exam information that is TBA or not determined yet:
-        \"\"\" 
-        {syllabus}
-        \"\"\"
-        """
-
-        responseInit = model.generate_content(promptInit)
-        raw_output = responseInit.text.strip()
-        print("Gemini Response:", raw_output)  # Debugging line
-
         prompt = f"""
-        Go through the following syllabus document, look for any midterm or exam, 
-        use the year 2025 and the curret month information to help you,
-        extrac only the valid dates, and times:
+        Extract exam subjects, their dates, and times from the following text:
         
         \"\"\" 
-        {responseInit}
+        {exam_text}
         \"\"\"
 
-        Return a JSON object with the following structure:
+        Return only a JSON object:
         {{
             "exam_schedule": [
                 {{"subject": "Math", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
@@ -214,7 +205,6 @@ def extract_exam_dates():
             ]
         }}
         """
-        # print(syllabus)
 
         response = model.generate_content(prompt)
         raw_output = response.text.strip()

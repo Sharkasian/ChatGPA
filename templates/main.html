@@ -1,51 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="stylesheet" href="../CSS/main.css">
-<script src="../JS/main.js"></script>
-<style>
-    /* Make the page scrollable */
-    body {
-        overflow-y: auto;
-        background-color: black;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Center the button */
-    .custom-btn {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 30px; /* Space from the content */
-        padding: 12px 24px;
-        font-size: 18px;
-        font-weight: bold;
-        text-transform: uppercase;
-        color: #dfbd73;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 300px;
-        height: 60px;
-    }
-
-    .custom-btn:hover {
-        background: linear-gradient(45deg, #ceb888, #c9a149);
-        transform: scale(1.05);
-    }
-    .button-span{
-        color: black;
-
-    }
-</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/main.css') }}">
+    <script src="{{ url_for('static', filename='JS/main.js') }}"></script>
 </head>
+
 <body>
     <div class=container>
         <div class=content style=display:block;width:1000px;height:562px>
@@ -71,13 +33,7 @@
                         <div class="face right text"></div>
                         <div class="face front"></div>
                         <div class="face back text"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    //button 
-    <button class="custom-btn btn-3" onclick=><span class="button-span">Read Syllabus</span></button>
+    <button class="custom-btn" onclick=><span class="button-span">Read Syllabus</span></button>
     
 </body>
 </html>
