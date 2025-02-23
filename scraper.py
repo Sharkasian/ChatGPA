@@ -7,6 +7,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.common.action_chains import ActionChains
+import fitz  # PyMuPDF
+import requests
+import json
+
 
 
 def click_at_coordinates(driver, x, y):
@@ -66,7 +70,6 @@ def scrape_brightspace(username, password):
 
         # **Step 1: Wait for the first shadow host**
         shadow_host = wait.until(EC.presence_of_element_located((By.TAG_NAME, "d2l-html-block")))
-
         # **Step 2: Find Login Button in Shadow Root**
         shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
         login_button = shadow_root.find_element(By.CSS_SELECTOR, 'a[title="Purdue West Lafayette Login"]')
@@ -85,7 +88,7 @@ def scrape_brightspace(username, password):
 
         # **Step 5: Wait for Homepage to Load**
         WebDriverWait(driver, 5).until(EC.title_contains("Homepage - Purdue West Lafayette"))
-        time.sleep(5)
+        time.sleep(10)
         print("Logged in successfully!")
 
         # **Step 6: Scroll to the courses section**
@@ -121,23 +124,62 @@ def scrape_brightspace(username, password):
             (800, 300),
             (200, 600),
             (500, 600),
-            (800, 600)
+            (600, 600)
         ]  # Python list to store clicks
 
         # # **Step 8: Click on the def# ined coordinates**
         for x, y in course_coordinates:
             # Create an ActionChains obj#     ect
+            time.sleep(4)
+            print(x, y)
             actions = ActionChains(driver)
-    
             # Move the mouse to the desired coordinates and click
             actions.move_by_offset(x, y).click().perform()
             time.sleep(3)
+            shadow_host = wait.until(EC.presence_of_element_located((By.TAG_NAME, "d2l-navigation")))
+            # **Step 2: Find Login Button in Shadow Root**
+            shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+            print("done")
 
-        time.sleep(5)
-        print("All course links clicked successfully!")
+            shadow_host = wait.until(EC.presence_of_element_located((By.TAG_NAME, "d2l-navigation-main-footer")))
+            # **Step 2: Find Login Button in Shadow Root**
+            shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+            print("done2")
+            link = driver.find_element(By.XPATH, "//a[@class='d2l-navigation-s-link' and contains(text(), 'Content')]")
+            # Get the href attribute
+            href = link.get_attribute("href")
+            driver.get(href)
+            actions.move_by_offset(-x, -y).click().perform()
+            actions.move_by_offset(200,250).click().perform()
+
+            time.sleep(10)
+
+            # Wait for the page to load the iframe with PDF
+            iframe = wait.until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+            driver.switch_to.frame(iframe)
+            print("Switched to iframe")
+
+            # # Find the embed element and extract PDF URL
+            # iframe_src = iframe.get_attribute("src")
+            # print("Iframe source URL:", iframe_src)
+            # # Fetch the PDF content
+            # response = requests.get(iframe_src)
+            # with open("syllabus.pdf", "wb") as f:
+            #     f.write(response.content)
+
+            # # Extract text from PDF
+            # doc = fitz.open("syllabus.pdf")
+            # pdf_text = "\n".join([page.get_text("text") for page in doc])
+            # print(pdf_text)
+            driver.get("https://purdue.brightspace.com/")
+            time.sleep(2)
+            driver.execute_script("window.scrollBy(0, 500);")
+            actions.move_by_offset(-200, -250).click().perform()
+
+
         
     finally:
         driver.quit()
 
 # Run the scraper
-scrape_brightspace("deng312", "Edzt6921!")
+scrape_brightspace("gupt1206", "Thunder@0205?!")
