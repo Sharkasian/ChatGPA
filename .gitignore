@@ -3,3 +3,6 @@
 *.iml
 .directory
 .idea
+*.json
+*.txt
+*.jpg

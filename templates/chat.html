@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Chatbot</title>
+    <style>
+        /* Add some basic styling */
+        body {
+            font-family: "Monaco", monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #chat-container {
+            width: 80%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 2px solid black;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            display: inline-block;
+            font-family: "Monaco", monospace;
+        }
+        .message.user {
+            text-align: right;
+            background-color: #DCF8C6;
+            align-self: flex-end;
+            font-family: "Monaco", monospace;
+        }
+        .message.bot {
+            text-align: left;
+            background-color: #F1F0F0;
+            align-self: flex-start;
+            font-family: "Monaco", monospace;
+        }
+        #user-input {
+            width: calc(100% - 100px);
+            padding: 12px;
+            border: 1px solid black;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-family: "Monaco", monospace;
+        }
+        #send-button {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid black;
+            background-color: #CEB888;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px; /* Increase the font size */
+            font-weight: 400;
+            font-family: "Monaco", monospace;
+        }
+        #send-button:hover {
+            background-color: #a0804f; /* Darker shade for hover effect */
+        }
+        #thinking-message {
+            display: none;
+            font-size: 16px;
+            color: grey;
+            margin-top: 10px;
+            font-family: "Monaco", monospace;
+        }
+        #chat-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #chat-subtitle {
+            font-size: 16px;
+            color: black;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-title">Gemini AI Chatbot</div>
+        <div id="chat-subtitle">Ask me anything!</div>
+        <div id="messages"></div>
+        <input type="text" id="user-input" placeholder="Type your message here...">
+        <button id="send-button">Send</button>
+        <div id="thinking-message" class="message bot">GeminiAI is thinking...</div>
+    </div>
+
+    <script>
+        document.getElementById("send-button").addEventListener("click", function() {
+            const userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;
+
+            const messagesContainer = document.getElementById("messages");
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.className = "message user";
+            userMessageDiv.textContent = userInput;
+            messagesContainer.appendChild(userMessageDiv);
+
+            const thinkingMessageDiv = document.getElementById("thinking-message");
+            thinkingMessageDiv.style.display = "block";
+            messagesContainer.appendChild(thinkingMessageDiv);
+
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                thinkingMessageDiv.style.display = "none";
+                const botMessageDiv = document.createElement("div");
+                botMessageDiv.className = "message bot";
+                botMessageDiv.innerHTML = data.reply.replace(/\$\$(.*?)\$\$/g, '<span class="latex">$1</span>')
+                                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                                     .replace(/__(.*?)__/g, '<u>$1</u>')
+                                                     .replace(/~~(.*?)~~/g, '<del>$1</del>') || data.error;
+                messagesContainer.appendChild(botMessageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+
+            document.getElementById("user-input").value = "";
+        });
+    </script>
+</body>
+</html>
