@@ -4,5 +4,7 @@
 .directory
 .idea
 *.json
-*.txt
 *.jpg
+*.png
+exam_dates.txt
+Homepage-Purdue West Lafayette_files/*
