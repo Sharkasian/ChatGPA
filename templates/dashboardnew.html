@@ -69,7 +69,7 @@
 
         th {
             background-color: #CEB888;
-            color: white;
+            color: black;
         }
         td .event{
             display: block; /* Ensures each event is on a new line */
@@ -125,6 +125,7 @@
             padding: 10px;
             border: 1px solid black;
             border-radius: 4px;
+            font-size: 16px;
         }
 
         #send-button {
@@ -132,7 +133,7 @@
             padding: 10px;
             border: 2px solid black;
             background-color: #CEB888;
-            color: white;
+            color: black;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
@@ -158,16 +159,47 @@
         font-weight: bold;
         
         }
+
+        .thinking-bubble {
+            display: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #F1F0F0;
+            align-self: flex-start;
+            font-style: italic;
+            color: #888;
+        }
+
+        .logout-button {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid black;
+            background-color: #CEB888;
+            color: black;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            display: flex;
+        }
+
+        .logout-button:hover {
+            background-color: #a0804f;
+        }
         
     </style>
 </head>
 <body>
     <div class="container">
         <div class="dashboard">
-            <h1>Welcome, {{ user }}!</h1>
-            <p>Your personalized study planner.</p>
+            <h1 style="font-size: 80px; margin-bottom: -10px; font-weight: 1000; -webkit-text-stroke: 0.75px black;" >Welcome!</h1>
+            <p style="font-size: 25px;">This is ChatGPA. Your personalized study planner.</p>
 
-            <h2>Weekly Calendar</h2>
+            <h2 style="margin-top: 40px;">Weekly Calendar</h2>
             <div class="calendar-container">
                 <table>
                     <tr>
@@ -193,19 +225,39 @@
                     </tr>
                 </table>
             </div>
-            <a href="/logout" class="btn">🔓 Logout</a>
         </div>
 
         <div class="chat-container">
-            <h2>Gemini AI Chatbot</h2>
-            <p>Ask me anything!</p>
+            <h2 style="margin-bottom: -10px;">Gemini AI ChatBot</h2>
+            <p style="margin-bottom: 50px;">Ask me anything!</p>
             <div id="messages"></div>
             <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-button">Send</button>
+            <button id="send-button" style="margin-bottom: 30px;">Send</button>
         </div>
+       
+    <div class="container">
+        <div class="dashboard">
+            <h2 style="margin-bottom: 10px; text-align: center;">Sync.so AI Generated Video</h2>
+            <iframe width="560" height="315" style="align-self: center;"
+            src="https://private-sync-user-generations-v2.s3.us-west-2.amazonaws.com/generations/8afdfdc0-3296-4380-8dae-e746a4f43107/d70bfcb1-f6a5-4168-80f9-0a0f63bfeea4_stitcher/result.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAWHRN73AZOHOWI6XJ%2F20250223%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250223T123747Z&X-Amz-Expires=604800&X-Amz-Signature=c819bf90e7622fd239e46c14b8ce6ce72d2396180263689b384f4023b9caf119&X-Amz-SignedHeaders=host&x-id=GetObject" 
+            title="AI Generated Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>    
     </div>
 
+    <form action="/logout">
+        <button type="submit" class="logout-button">Log out</button>
+    </form>
+</div>
+
+
     <script>
+        function formatText(text) {
+            // Replace asterisks with HTML tags for bold and italic
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
+        }
+
         document.getElementById("send-button").addEventListener("click", function() {
             const userInput = document.getElementById("user-input").value;
             if (userInput.trim() === "") return;
@@ -216,6 +268,12 @@
             userMessageDiv.textContent = userInput;
             messagesContainer.appendChild(userMessageDiv);
 
+            const thinkingBubble = document.createElement("div");
+            thinkingBubble.className = "thinking-bubble";
+            thinkingBubble.textContent = "Gemini AI is thinking...";
+            messagesContainer.appendChild(thinkingBubble);
+            thinkingBubble.style.display = "block"; // Show thinking bubble
+
             fetch("/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -223,9 +281,11 @@
             })
             .then(response => response.json())
             .then(data => {
+                thinkingBubble.style.display = "none"; // Hide thinking bubble
+
                 const botMessageDiv = document.createElement("div");
                 botMessageDiv.className = "message bot";
-                botMessageDiv.textContent = data.reply || data.error;
+                botMessageDiv.innerHTML = formatText(data.reply || data.error);
                 messagesContainer.appendChild(botMessageDiv);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             });

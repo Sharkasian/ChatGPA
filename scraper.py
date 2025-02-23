@@ -7,8 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.common.action_chains import ActionChains
-import requests
-import json
 
 
 def click_at_coordinates(driver, x, y):
@@ -144,4 +142,4 @@ def scrape_brightspace(username, password):
         driver.quit()
 
 # Run the scraper
-# scrape_brightspace("deng312", "Edzt6921!")
+#scrape_brightspace("username", "password")

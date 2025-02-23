@@ -3,8 +3,6 @@ import requests
 import re
 import os
 from os import environ as env
-from video_utils import generate_video_url
-from video_utils import check_video_status
 
 import google.generativeai as genai
 from authlib.integrations.flask_client import OAuth
@@ -73,7 +71,7 @@ def callback():
     token = oauth.google.authorize_access_token()
     session["user"] = token
     session["access_token"] = token["access_token"]
-    return redirect("/loading")
+    return redirect("/dashboard")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -82,10 +80,16 @@ def login():
         username = request.form.get("username")
         session["username"] = username
         password = request.form.get("password")
-        session["passwor"] = password
+        session["password"] = password
 
-        # Process the username and password as needed
-        print(f"Username: {username}, Password: {password}")
+        # Only call scrape_brightspace if username and password are set
+        # if username and password:
+            # scrape_brightspace(username, password)
+            # pdf_to_txt()
+           
+        # Debugging: Print session variables
+        print(f"Session Username: {session.get('username')}, Session Password: {session.get('password')}")
+
         # You can add logic here to authenticate the user or perform other actions
         redirect_uri = url_for("callback", _external=True)
         return oauth.google.authorize_redirect(redirect_uri)
@@ -95,19 +99,19 @@ def login():
     return oauth.google.authorize_redirect(redirect_uri)
 
 
-@app.route("/loading")
-def loading():
-    return render_template("main.html")
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
 
 
-@app.route("/dashboard", methods=["GET"])
+@app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
-    username = session["username"]
+    username = session.get("username")
+    password = session.get("password")
+
+    # Debugging: Print session variables
+    print(f"Dashboard - Session Username: {username}, Session Password: {password}")
 
     access_token = session.get("access_token")
     if not access_token:
@@ -149,148 +153,148 @@ def dashboard():
                 "end_time": format_time(end) if "T" in end else "All day"
             })
 
-    # print(formatted_events)
-    
     return render_template("dashboardnew.html", events=formatted_events, user=username)
 
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
-    token = oauth.google.authorize_access_token()
-    if request.method == "GET":
-        return render_template("chat.html")
+    # if request.method == "GET":
+    #     return render_template("chat.html")
 
-    user_message = request.json.get("message", "")
+    if request.method == "POST":
+        user_message = request.json.get("message", "")
 
-    if not user_message:
-        return jsonify({"error": "Message cannot be empty"}), 400
+        if not user_message:
+            return jsonify({"error": "Message cannot be empty"}), 400
 
-    try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(user_message)
-        prompttext = "You are a tutor in the subject of choice said after the colon. I want you to write a paragraph as how a teacher would explain the topic mentioned. I do not want a script but some paragraphs that generate the text: "
-        text_video = model.generate_content(prompttext + user_message)
-        session["text_video"] = text_video
+        try:
+            model = genai.GenerativeModel("gemini-pro")
+            response = model.generate_content(user_message)
+# prompttext = "You are a tutor in the subject of choice said after the colon. I want you to write a paragraph as how a teacher would explain the topic mentioned. I do not want a script but some paragraphs that generate the text: "
+        # text_video = model.generate_content(prompttext + user_message)
+        # session["text_video"] = text_video
 
-        return jsonify({"reply": response.text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+            return jsonify({"reply": response.text})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
 
 @app.route("/extract_exams", methods=["GET", "POST"])
-def extract_exam_dates():
-    scrape_brightspace(session["username"], session["password"])
-    pdf_to_txt()
+def extract_exams():
+    if request.method == "POST":
+        if request.content_type != 'application/json':
+            print("Unsupported Media Type:", request.content_type)  # Debugging line
+            return jsonify({"error": "Unsupported Media Type. Content-Type must be 'application/json'"}), 415
 
-    if request.method == "POST" and request.content_type != 'application/json':
-        return jsonify({"error": "Unsupported Media Type. Content-Type must be 'application/json'"}), 415
+        access_token = session.get("access_token")
+        if not access_token:
+            print("User not logged in")  # Debugging line
+            return jsonify({"error": "User not logged in"}), 401
 
-    access_token = session.get("access_token")
-    if not access_token:
-        return jsonify({"error": "User not logged in"}), 401
+        try:
+            # Read text file
+            syllabus = load_text_file()
+            if not syllabus:
+                print("File is empty or missing")  # Debugging line
+                return jsonify({"error": "File is empty or missing"}), 500
 
-    try:
-        # Read text file
-        exam_text = load_text_file()
-        if not exam_text:
-            return jsonify({"error": "File is empty or missing"}), 500
+            model = genai.GenerativeModel("gemini-pro")
 
-        model = genai.GenerativeModel("gemini-pro")
-        prompt = f"""
-        Extract exam subjects, their dates, and times from the following text:
-        
-        \"\"\" 
-        {exam_text}
-        \"\"\"
+            promptInit = f"""
+            Read through the following syllabus and summarize information about midterm and exam schedule,
+            including name of the subject, dates, and times. Exclude exam schedule information that is TBA
+            or undetermined, put all the information in a summarized text. Make sure to include the current year
+            which is year of 2025, as well as the current month. Also include the course title which should be in the format
+            similar to "MA26200" or "CS18000".
+            
+            \"\"\" 
+            {syllabus}
+            \"\"\"
+            """
+            response = model.generate_content(promptInit)
+            raw_output = response.text.strip()
+            print("Gemini Response:", raw_output)  # Debugging line
 
-        Return only a JSON object:
-        {{
-            "exam_schedule": [
-                {{"subject": "Math", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
-                {{"subject": "Physics", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
-                {{"subject": "Chemistry", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}}
-            ]
-        }}
-        """
+            prompt = f"""
+            Extract exam subjects, their dates, and times from the following text:
+            
+            \"\"\"
+            {response}
+            \"\"\"
 
-        response = model.generate_content(prompt)
-        raw_output = response.text.strip()
-        print("Gemini Response:", raw_output)  # Debugging line
+            Return only a JSON object:
+            {{
+                "exam_schedule": [
+                    {{"subject": "Math Exam 1", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
+                    {{"subject": "Physics Midterm 2", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}},
+                    {{"subject": "Chemistry Midterm 1", "date": "YYYY-MM-DD", "time": "HH:MM-HH:MM"}}
+                ]
+            }}
+            """
 
-        # Extract JSON portion from response
-        json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
-        if json_match:
-            json_string = json_match.group(0)
-            extracted_dates = json.loads(json_string)
-        else:
-            return jsonify({"error": "Invalid JSON format from Gemini"}), 500
+            response = model.generate_content(prompt)
+            raw_output = response.text.strip()
+            print("Gemini Response:", raw_output)  # Debugging line
 
-        # Add events to Google Calendar
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
+            # Extract JSON portion from response
+            json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
+            if json_match:
+                json_string = json_match.group(0)
+                extracted_dates = json.loads(json_string)
+            else:
+                print("Invalid JSON format from Gemini")  # Debugging line
+                return jsonify({"error": "Invalid JSON format from Gemini"}), 500
 
-        for exam in extracted_dates["exam_schedule"]:
-            # Split the time range into start and end times
-            time_range = exam["time"].split('-')
-            if len(time_range) != 2:
-                return jsonify({"error": "Invalid time range format"}), 400
-
-            start_time_str, end_time_str = time_range
-            start_time = datetime.strptime(f"{exam['date']} {start_time_str}", "%Y-%m-%d %H:%M")
-            end_time = datetime.strptime(f"{exam['date']} {end_time_str}", "%Y-%m-%d %H:%M")
-
-            event = {
-                "summary": exam["subject"],
-                "start": {
-                    "dateTime": start_time.isoformat(),
-                    "timeZone": "UTC"
-                },
-                "end": {
-                    "dateTime": end_time.isoformat(),
-                    "timeZone": "UTC"
-                }
+            # Add events to Google Calendar
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
             }
 
-            response = requests.post(
-                "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-                headers=headers,
-                json=event
-            )
+            for exam in extracted_dates["exam_schedule"]:
+                # Split the time range into start and end times
+                time_range = exam["time"].split('-')
+                if len(time_range) != 2:
+                    print("Invalid time range format")  # Debugging line
+                    return jsonify({"error": "Invalid time range format"}), 400
 
-            if response.status_code != 200:
-                return jsonify({"error": response.json().get("error", "Failed to create event")}), response.status_code
+                start_time_str, end_time_str = time_range
+                start_time = datetime.strptime(f"{exam['date']} {start_time_str}", "%Y-%m-%d %H:%M")
+                end_time = datetime.strptime(f"{exam['date']} {end_time_str}", "%Y-%m-%d %H:%M")
 
-        return jsonify({"message": "Events created successfully"}), 200
+                event = {
+                    "summary": exam["subject"],
+                    "start": {
+                        "dateTime": start_time.isoformat(),
+                        "timeZone": "EST"
+                    },
+                    "end": {
+                        "dateTime": end_time.isoformat(),
+                        "timeZone": "EST"
+                    }
+                }
 
-    except json.JSONDecodeError as e:
-        return jsonify({"error": f"JSON decode error: {str(e)}"}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-@app.route('/generate_video', methods=['POST'])
-def generate_video():
-    # Retrieve the text
-    text = text_video
+                response = requests.post(
+                    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                    headers=headers,
+                    json=event
+                )
 
-    # Generate video
-    job_id = generate_video_url(text)
+                if response.status_code != 200:
+                    print(f"Failed to create event: {response.json()}")  # Debugging line
+                    return jsonify({"error": response.json().get("error", "Failed to create event")}), response.status_code
 
+            return jsonify({"message": "Events created successfully"}), 200
 
-    if job_id:
-        return jsonify({"message": "Video generation started", "job_id": job_id}), 202
-    else:
-        return jsonify({"error": "Failed to start video generation"}), 500
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")  # Debugging line
+            return jsonify({"error": f"JSON decode error: {str(e)}"}), 500
+        except Exception as e:
+            print(f"Exception: {str(e)}")  # Debugging line
+            return jsonify({"error": str(e)}), 500
 
-@app.route('/check_video_status/<job_id>', methods=['GET'])
-def check_status(job_id):
-    # Check video status
-    status, video_url = check_video_status(job_id)
-    
-    if status == "completed":
-        return jsonify({"status": status, "video_url": video_url}), 200
-    else:
-        return jsonify({"status": status, "video_url": None}), 202
+    return jsonify({"error": "Invalid request method"}), 405
+
 
 
 if __name__ == "__main__":

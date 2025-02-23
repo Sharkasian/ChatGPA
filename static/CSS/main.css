@@ -242,8 +242,9 @@ span {
         cursor: pointer;
         transition: all 0.3s ease;
         width: 300px;
-        height: 60px;
+        height: 6000px;
         background-color: white; /* Ensure the button has a background color */
+		z-index: 100;
     }
 
     .custom-btn:hover {
