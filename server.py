@@ -165,6 +165,10 @@ def chat():
     try:
         model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content(user_message)
+        prompttext = "You are a tutor in the subject of choice said after the colon. I want you to write a paragraph as how a teacher would explain the topic mentioned. I do not want a script but some paragraphs that generate the text: "
+        text_video = model.generate_content(prompttext + user_message)
+        print(text_video)
+
         return jsonify({"reply": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
