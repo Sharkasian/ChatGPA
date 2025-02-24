@@ -83,9 +83,9 @@ def login():
         session["password"] = password
 
         # Only call scrape_brightspace if username and password are set
-        # if username and password:
-            # scrape_brightspace(username, password)
-            # pdf_to_txt()
+        if username and password:
+            scrape_brightspace(username, password)
+            pdf_to_txt()
            
         # Debugging: Print session variables
         print(f"Session Username: {session.get('username')}, Session Password: {session.get('password')}")
